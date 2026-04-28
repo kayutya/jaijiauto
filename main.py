@@ -1,25 +1,33 @@
-name: Discord Bot
-on:
-  push:
-    branches: [ main ]
-  workflow_dispatch: # 手動で起動できるようにする
+import discord
+import os
 
-jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+intents = discord.Intents.default()
+intents.message_content = True
+client = discord.Client(intents=intents)
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.10'
+# 反応したい相手のユーザーIDをここに数字で入れる
+TARGET_USER_ID = 相手のユーザーIDを入れる 
 
-      - name: Install dependencies
-        run: pip install -r requirements.txt
+# つけたいスタンプの順番
+REACTIONS = ["♿", "🇬", "🇦", "🇮", "🇯"]
 
-      - name: Run Bot
-        env:
-          DISCORD_BOT_TOKEN: ${{ secrets.DISCORD_BOT_TOKEN }}
-        run: python main.py
+@client.event
+async def on_ready():
+    print(f'ログインしました: {client.user}')
+
+@client.event
+async def on_message(message):
+    # ボット自身の発言には反応しない
+    if message.author.id == client.user.id:
+        return
+
+    # 指定したユーザーIDと一致したらスタンプを押す
+    if message.author.id == TARGET_USER_ID:
+        for emoji in REACTIONS:
+            try:
+                await message.add_reaction(emoji)
+            except Exception as e:
+                print(f"エラー: {e}")
+
+# GitHubのSecretsからトークンを読み込む
+client.run(os.getenv('DISCORD_BOT_TOKEN'))
