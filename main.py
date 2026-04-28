@@ -6,7 +6,7 @@ intents.message_content = True
 client = discord.Client(intents=intents)
 
 # 反応したい相手のユーザーIDをここに数字で入れる
-TARGET_USER_ID = 相手のユーザーIDを入れる 
+TARGET_USER_ID = 808264919862214658
 
 # つけたいスタンプの順番
 REACTIONS = ["♿", "🇬", "🇦", "🇮", "🇯"]
