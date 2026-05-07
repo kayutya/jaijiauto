@@ -38,15 +38,26 @@ async def on_message(message):
     if message.author.id == client.user.id:
         return
 
-    # コマンド判定
+　　# コマンド判定（!on）
     if message.content == "!on":
         is_active = True
-        await message.channel.send("ガイジが騒ぎ出しました。スタンプを押します。")
+        # ボットのニックネームに【ON】を付ける
+        try:
+            await message.guild.me.edit(nick="gaiji auto【ON】")
+        except:
+            pass # 権限がない場合は無視して進む
+        await message.channel.send("🔴 モード：ON\nガイジが騒ぎ出しました。スタンプを押します。")
         return
     
-　　if message.content in ["!off", "!fuck off", "!寝ろ"]:
+    # コマンド判定（!off / !fuck off / !寝ろ）
+    if message.content in ["!off", "!fuck off", "!寝ろ"]:
         is_active = False
-        await message.channel.send("ガイジは休憩に入りました。")
+        # ボットのニックネームに【OFF】を付ける
+        try:
+            await message.guild.me.edit(nick="gaiji auto【OFF】")
+        except:
+            pass # 権限がない場合は無視して進む
+        await message.channel.send("⚪ モード：OFF\nガイジは休憩に入りました。")
         return
 
     # スタンプ実行（指定のIDのユーザーが喋った時のみ）
