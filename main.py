@@ -1,24 +1,22 @@
 import discord
 from discord.ext import commands
 import asyncio
-import time
 import os
 
 # --- 基本設定 ---
 TOKEN = os.getenv("DISCORD_TOKEN")
 TARGET_USER_ID = 1172772592534568971
 is_active = False
-last_stamp_time = 0
-COOLDOWN_SECONDS = 5 
+# 連投検知用のカウンター
+pending_tasks = {}
 
 intents = discord.Intents.default()
 intents.message_content = True
-# ここを command_prefix に修正しました
 bot = commands.Bot(command_prefix="!", intents=intents)
 
 @bot.event
 async def on_message(message):
-    global is_active, last_stamp_time
+    global is_active
 
     if message.author == bot.user:
         return
@@ -34,25 +32,33 @@ async def on_message(message):
         await message.channel.send("ガイジは休憩に入りました。")
         return
 
-    # スタンプ爆撃
+    # スタンプ爆撃（連投の最後にだけ反応）
     if is_active and message.author.id == TARGET_USER_ID:
-        current_time = time.time()
         
-        # 5秒以内の連投なら無視
-        if current_time - last_stamp_time < COOLDOWN_SECONDS:
-            return
+        # すでに「待ち」状態のタスクがあればキャンセル（最新の発言を優先するため）
+        if TARGET_USER_ID in pending_tasks:
+            pending_tasks[TARGET_USER_ID].cancel()
 
-        # 順番：車いす ➔ 生姜 ➔ 医者
-        emojis = ["🧑‍🦽", "🫚", "🧑‍⚕️"] 
-        
-        # スタンプ時間を更新
-        last_stamp_time = current_time
+        # 新しい「待ち」タスクを作成
+        task = asyncio.create_task(wait_and_react(message))
+        pending_tasks[TARGET_USER_ID] = task
 
-        for emoji in emojis:
-            try:
-                await message.add_reaction(emoji)
-                await asyncio.sleep(0.5) 
-            except:
-                pass
+async def wait_and_react(message):
+    # 1.5秒間、次の発言が来るのを待つ（ここを調整して「待ち時間」を変えられます）
+    await asyncio.sleep(2.5)
+    
+    # 順番：車いす ➔ 生姜 ➔ 医者
+    emojis = ["🧑‍🦽", "🫚", "🧑‍⚕️"] 
+    
+    for emoji in emojis:
+        try:
+            await message.add_reaction(emoji)
+            await asyncio.sleep(0.4) 
+        except:
+            pass
+    
+    # 終わったらタスクリストから消す
+    if TARGET_USER_ID in pending_tasks:
+        del pending_tasks[TARGET_USER_ID]
 
 bot.run(TOKEN)
