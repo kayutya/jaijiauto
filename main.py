@@ -44,7 +44,7 @@ async def on_message(message):
         await message.channel.send("ガイジが騒ぎ出しました。スタンプを押します。")
         return
     
-    if message.content == "!off":
+　　if message.content in ["!off", "!fuck off", "!寝ろ"]:
         is_active = False
         await message.channel.send("ガイジは休憩に入りました。")
         return
