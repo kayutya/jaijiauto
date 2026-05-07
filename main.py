@@ -1,7 +1,13 @@
+import discord
+from discord.ext import commands
+import asyncio
+import os  # ← これを足しました！これでエラーが消えます
+
 # --- 基本設定 ---
 TOKEN = os.getenv("DISCORD_TOKEN")
 TARGET_USER_ID = 1172772592534568971
 is_active = False
+# 連投検知用のカウンター
 pending_tasks = {}
 # 通知を送るチャンネルを保存する変数
 notification_channel = None
@@ -47,7 +53,7 @@ async def on_message(message):
 
 async def wait_and_react(message):
     try:
-        await asyncio.sleep(1.5) # 2.5秒溜める
+        await asyncio.sleep(1.5) # 1.5秒溜める
         
         # 順番：車いす ➔ 生姜 ➔ 医者
         emojis = ["🧑‍🦽", "🫚", "🧑‍⚕️"] 
