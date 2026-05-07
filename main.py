@@ -9,11 +9,12 @@ TOKEN = os.getenv("DISCORD_TOKEN")
 TARGET_USER_ID = 1172772592534568971
 is_active = False
 last_stamp_time = 0
-COOLDOWN_SECONDS = 5 # 一度スタンプを押したら5秒間は次を押さない
+COOLDOWN_SECONDS = 5 
 
 intents = discord.Intents.default()
 intents.message_content = True
-bot = commands.Bot(command_content="!", intents=intents)
+# ここを command_prefix に修正しました
+bot = commands.Bot(command_prefix="!", intents=intents)
 
 @bot.event
 async def on_message(message):
@@ -50,7 +51,7 @@ async def on_message(message):
         for emoji in emojis:
             try:
                 await message.add_reaction(emoji)
-                await asyncio.sleep(0.5) # 制限回避
+                await asyncio.sleep(0.5) 
             except:
                 pass
 
