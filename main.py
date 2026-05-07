@@ -2,6 +2,15 @@ import discord
 import os
 from http.server import HTTPServer, BaseHTTPRequestHandler
 import threading
+import asyncio # まだインポートしてなければ一番上に追加
+
+# --- スタンプを押す部分 ---
+for emoji in emojis:
+    try:
+        await message.add_reaction(emoji)
+        await asyncio.sleep(0.5)  # 0.5秒だけ待つ（これで制限を回避しやすくなる）
+    except Exception as e:
+        print(f"Error: {e}")
 
 # --- Renderの強制終了を防ぐためのダミーサーバー ---
 class HealthCheckHandler(BaseHTTPRequestHandler):
