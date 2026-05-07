@@ -3,6 +3,9 @@ on:
   push:
     branches: [ main ]
   workflow_dispatch:
+  schedule:
+    # 3時間おきに自動実行（UTC時間なので注意）
+    - cron: '0 */3 * * *'
 
 jobs:
   run:
