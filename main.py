@@ -1,83 +1,57 @@
 import discord
+from discord.ext import commands
+import asyncio
+import time
 import os
-from http.server import HTTPServer, BaseHTTPRequestHandler
-import threading
-import asyncio # まだインポートしてなければ一番上に追加
 
-# --- スタンプを押す部分 ---
-for emoji in emojis:
-    try:
-        await message.add_reaction(emoji)
-        await asyncio.sleep(0.5)  # 0.5秒だけ待つ（これで制限を回避しやすくなる）
-    except Exception as e:
-        print(f"Error: {e}")
+# --- 基本設定 ---
+TOKEN = os.getenv("DISCORD_TOKEN")
+TARGET_USER_ID = 1172772592534568971
+is_active = False
+last_stamp_time = 0
+COOLDOWN_SECONDS = 5 # 一度スタンプを押したら5秒間は次を押さない
 
-# --- Renderの強制終了を防ぐためのダミーサーバー ---
-class HealthCheckHandler(BaseHTTPRequestHandler):
-    def do_GET(self):
-        self.send_response(200)
-        self.end_headers()
-        self.wfile.write(b"Bot is active")
-
-def run_health_check():
-    port = int(os.environ.get("PORT", 10000))
-    httpd = HTTPServer(('0.0.0.0', port), HealthCheckHandler)
-    httpd.serve_forever()
-
-threading.Thread(target=run_health_check, daemon=True).start()
-
-# --- ボット本体 ---
 intents = discord.Intents.default()
 intents.message_content = True
-client = discord.Client(intents=intents)
+bot = commands.Bot(command_content="!", intents=intents)
 
-# 先ほど送ってくれたIDをセットしました
-TARGET_USER_ID = 1172772592534568971 
-
-is_active = False
-
-@client.event
-async def on_ready():
-    print(f'準備完了: {client.user}')
-
-@client.event
+@bot.event
 async def on_message(message):
-    global is_active
-    
-    if message.author.id == client.user.id:
+    global is_active, last_stamp_time
+
+    if message.author == bot.user:
         return
 
-　　# コマンド判定（!on）
+    # オンオフ切り替え
     if message.content == "!on":
         is_active = True
-        # ボットのニックネームに【ON】を付ける
-        try:
-            await message.guild.me.edit(nick="gaiji auto【ON】")
-        except:
-            pass # 権限がない場合は無視して進む
-        await message.channel.send("🔴 モード：ON\nガイジが騒ぎ出しました。スタンプを押します。")
+        await message.channel.send("ガイジが騒ぎ出しました。スタンプを押します。")
         return
     
-    # コマンド判定（!off / !fuck off / !寝ろ）
     if message.content in ["!off", "!fuck off", "!寝ろ"]:
         is_active = False
-        # ボットのニックネームに【OFF】を付ける
-        try:
-            await message.guild.me.edit(nick="gaiji auto【OFF】")
-        except:
-            pass # 権限がない場合は無視して進む
-        await message.channel.send("⚪ モード：OFF\nガイジは休憩に入りました。")
+        await message.channel.send("ガイジは休憩に入りました。")
         return
 
-    # スタンプ実行（指定のIDのユーザーが喋った時のみ）
+    # スタンプ爆撃
     if is_active and message.author.id == TARGET_USER_ID:
-        emojis = ["♿", "🇬", "🇦", "🇮", "🇯"]
+        current_time = time.time()
+        
+        # 5秒以内の連投なら無視
+        if current_time - last_stamp_time < COOLDOWN_SECONDS:
+            return
+
+        # 順番：車いす ➔ 生姜 ➔ 医者
+        emojis = ["🧑‍🦽", "🫚", "🧑‍⚕️"] 
+        
+        # スタンプ時間を更新
+        last_stamp_time = current_time
+
         for emoji in emojis:
             try:
                 await message.add_reaction(emoji)
-            except Exception as e:
-                print(f"Error: {e}")
+                await asyncio.sleep(0.5) # 制限回避
+            except:
+                pass
 
-# Renderの環境変数からトークンを読み込む
-token = os.getenv('DISCORD_BOT_TOKEN')
-client.run(token)
+bot.run(TOKEN)
